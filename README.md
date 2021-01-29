@@ -9,7 +9,7 @@ It should read the measurement of the sensor and send the data over [The Things 
 ### 1.1 The Things Network
 1. If you aren't already registered, [set up a The Things Network account](https://account.thethingsnetwork.org/register)
 2. Create a new Application in TTN [Applications Console](https://console.thethingsnetwork.org/applications)
-3. Add a new device for your new TTN application and select **ABP Activation Method**
+3. Add a new device for your new TTN application and select **OTAA Activation Method**
 4. In your Application select **Payload Formats** and set it to `Cayenne LPP`
 5. For the integration with [OpenSenseMap](https://opensensemap.org/), select **Integrations** in your Application and create a new **HTTP Integration**
 6. Choose a unique 'Process ID' and set 'Access Key' to `default key`. For the 'URL' use `https://ttn.opensensemap.org/v1.1` as the endpoint and choose `POST` as the 'Method' . The remaining fields can be left out ([See here](https://osem.books.sensebox.de/de/ttn_integration.html)).
@@ -31,13 +31,13 @@ It should read the measurement of the sensor and send the data over [The Things 
 
 ## 3. ESP Setup
 1. Copy the Template: `cp config.h.template config.h`. (This file is filled in with private data and should not be published)
-2. Insert **Network Session Key**, **App Session Key** and **Device Adress** from the **Device Overview** in your [TheThingsNetwork application](https://console.thethingsnetwork.org/applications) to the `config.h` file. (Note: use the 'C-style' with msb)
+2. Insert **Application EUI** (lsb), **Device EUI** (lsb) and **App Key** (msb) from the **Device Overview** in your [TheThingsNetwork application](https://console.thethingsnetwork.org/applications) to the `config.h` file. (Note: use the 'C-style' not Hex)
 3. Upload sketch to your board by using the `TTGO LoRa32-OLED-V1` Board from the [ESP32 Core for Arduino](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md)
 
 #### Notes:
 
 - Maybe you need to change the 'Region Configuration' of the [Arduino-LMIC](https://github.com/mcci-catena/arduino-lmic) library. To change it, go to the `lmic_project_config.h` file within the LMIC Arduino library ([See here](https://github.com/mcci-catena/arduino-lmic#configuration)).
-- Sometimes the TTN application does not receive packages, after a restart of the device. The option 'reset frame counters' in your TTN **Device Overview** can help. (I'm still trying to figure out the reasons for this behaviour...)
+- When using **ABP Activation** instead of **OTAA Activation** the TTN application does not receive packages after a restart of the device. The option 'reset frame counters' in your TTN **Device Overview** helps ([see here](https://forum.sodaq.com/t/not-receiving-data-until-frame-counter-reset-in-ttn-console/632/3)).
 
 ## 4. Wiring of the Ultrasonic Sensor SKU (A02YYUW)
 1. Connect `GND` of Sensor to `GND` of Board
