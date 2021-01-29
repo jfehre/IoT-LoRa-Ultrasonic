@@ -2,14 +2,44 @@
 
 This is an Arduino projekt for the [TTGO ESP32 LoRa](http://www.lilygo.cn/prod_view.aspx?TypeId=50003&Id=1141&FId=t3:50003:3) board in combination with an [waterproof ultrasonic sensor SKU (A02YYUW)](https://wiki.dfrobot.com/A02YYUW%20Waterproof%20Ultrasonic%20Sensor%20SKU:%20SEN0311) from dfrobot.
 
-It should read the measurement of the sensor and send the data to [The Things Network](https://www.thethingsnetwork.org/).
+It should read the measurement of the sensor and send the data over [The Things Network](https://www.thethingsnetwork.org/) to the [OpenSenseMap](https://opensensemap.org/).
 
-## 1. Setup
+## 1. Backend Setup
+
+### 1.1 The Things Network
+1. If you aren't already registered, [set up a The Things Network account](https://account.thethingsnetwork.org/register)
+2. Create a new Application in TTN [Applications Console](https://console.thethingsnetwork.org/applications)
+3. Add a new device for your new TTN application and select **ABP Activation Method**
+4. In your Application select **Payload Formats** and set it to `Cayenne LPP`
+5. For the integration with [OpenSenseMap](https://opensensemap.org/), select **Integrations** in your Application and create a new **HTTP Integration**
+6. Choose a unique 'Process ID' and set 'Access Key' to `default key`. For the 'URL' use `https://ttn.opensensemap.org/v1.1` as the endpoint and choose `POST` as the 'Method' . The remaining fields can be left out ([See here](https://osem.books.sensebox.de/de/ttn_integration.html)).
+
+### 1.2 OpenSenseMap
+1. If you aren't already registered, [set up a OpenSenseMap account](https://opensensemap.org/register)
+2. In your **Dashboard** create a 'New senseBox'
+3. Fill in the appropriate data like 'name', 'exposure type' and 'location'
+4. Select 'Manual configuration' for your **Hardware** and 'Add sensor' with Phenomenon: `distance`, Unit: `mm` and Type: `ultrasonic`.
+5. In **Advanced** choose 'TheThingsNetwork-TTN' and add `Cayenne LPP (beta)` as 'Decoding Profile'. Furthermore add your 'TTN Application-ID' and 'TTN Device-ID' from your [TheThingsNetwork application](https://console.thethingsnetwork.org/applications).
+6. After your 'senseBox' is created edit it and go the **TheThingsNetwork** Settings.
+7. In **Decoding Options** choose 'Cayenne LPP Phenomenon' as `Illumination` (to support floats with uint16) and if not already set, the 'Cayenne LPP Channel' to `1`.
+
+## 2. Install Libraries in Arduino IDE
 1. Install the [ESP32 Core for Arduino](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md) (Installation with Boards Manager)
-2. Install the [LoRa](https://github.com/sandeepmistry/arduino-LoRa) library which supports the SX1276 LoRa Chip
-3. Upload sketch to your board by using the `TTGO LoRa32-OLED-V1` Board
+2. Install the [LoRa](https://github.com/sandeepmistry/arduino-LoRa) library which supports the SX1276 Chip
+3. Install [CayenneLPP](https://github.com/sabas1080/CayenneLPP) to package LoRa packets.
+4. Install [Arduino-LMIC](https://github.com/mcci-catena/arduino-lmic) to send data over LoRaWan
 
-## 2. Wiring
+## 3. ESP Setup
+1. Copy the Template: `cp config.h.template config.h`. (This file is filled in with private data and should not be published)
+2. Insert **Network Session Key**, **App Session Key** and **Device Adress** from the **Device Overview** in your [TheThingsNetwork application](https://console.thethingsnetwork.org/applications) to the `config.h` file. (Note: use the 'C-style' with msb)
+3. Upload sketch to your board by using the `TTGO LoRa32-OLED-V1` Board from the [ESP32 Core for Arduino](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md)
+
+#### Notes:
+
+- Maybe you need to change the 'Region Configuration' of the [Arduino-LMIC](https://github.com/mcci-catena/arduino-lmic) library. To change it, go to the `lmic_project_config.h` file within the LMIC Arduino library ([See here](https://github.com/mcci-catena/arduino-lmic#configuration)).
+- Sometimes the TTN application does not receive packages, after a restart of the device. The option 'reset frame counters' in your TTN **Device Overview** can help. (I'm still trying to figure out the reasons for this behaviour...)
+
+## 4. Wiring of the Ultrasonic Sensor SKU (A02YYUW)
 1. Connect `GND` of Sensor to `GND` of Board
 2. Connect VCC of Sensor to either `3V3` or `5V`
 3. Connect `RX` of Sensor to PIN `17 (U2_TXD)` 
@@ -22,8 +52,4 @@ You should also be able to use the other UART 1 connection of the board (Unforun
 ### TTGO ESP32 LoRa Pinout:
 ![ESP Pinout](images/esp_pinout.jpeg)
 
-
-## 3. List of Libraries
-- [ESP32 Core for Arduino](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md) (Installation with Boards Manager)
-- [LoRa](https://github.com/sandeepmistry/arduino-LoRa)
 
