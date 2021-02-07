@@ -7,9 +7,22 @@
 // COPY the config.h.template and RENAME to config.h file in the same folder WITH YOUR TTN KEYS AND ADDR.
 #include "config.h"
 
+//DEFINE PINS
+// PINS for trig and echo (used by sensortype TRIG_ECHO)
+#define TRIG_PIN    13    // pin TRIG 
+#define ECHO_PIN    12    // pin ECHO 
+// PINS for RX and TX (UART Serial) (used by sensortype A02YYUW)
+#define RX_PIN      17    // pin RX
+#define TX_PIN      16    // pin TX
+
+
+//Define Serial for UART connection
 HardwareSerial mySerial(2);
 unsigned char data[4]={};
+
+//sensordata
 float distance;
+
 
 CayenneLPP lpp(51); // here we will construct Cayenne Low Power Payload (LPP) - see https://community.mydevices.com/t/cayenne-lpp-2-0/7510
 
@@ -34,39 +47,66 @@ const lmic_pinmap lmic_pins = {
     .dio = {/*dio0*/ 26, /*dio1*/ 33, /*dio2*/ 32}
 };
 
+
 /*
- * Function to read distance from Sensor (float distance saves distance in mm)
+ * Function to read distance from different sensortypes (float distance saves distance in mm)
  */
 void getDistance() {
-  while (mySerial.available() > 0) {
-    for (int i=0;i<4;i++) {
-      data[i] = mySerial.read();
+  switch (sensor)
+  {
+    //read sensor over UART (sensortype A0YYUW)
+    case A0YYUW:
+    {
+      while (mySerial.available() > 0) {
+        for (int i=0;i<4;i++) {
+          data[i] = mySerial.read();
+        }
+      }
+    
+      mySerial.flush();
+  
+      if(data[0]==0xff)
+      {
+        int sum;
+        sum=(data[0]+data[1]+data[2])&0x00FF;
+        if(sum==data[3])
+        {
+          distance=(data[1]<<8)+data[2];
+        }else Serial.println("ERROR");
+      }
+      else Serial.println("ERROR: first byte wrong");
+      break;
     }
+    //read sensor over TRIG/ECHO (sensortype ex. AJ-SR04M or HC-SR04)  
+    case TRIG_ECHO:
+    {
+      digitalWrite(TRIG_PIN, LOW);  
+      delayMicroseconds(5); 
+  
+      digitalWrite(TRIG_PIN, HIGH);
+      delayMicroseconds(10); 
+  
+      digitalWrite(TRIG_PIN, LOW);
+      long duration = pulseIn(ECHO_PIN, HIGH);
+      distance = duration * 0.343/2;
+      break;
+    }
+    //default case
+    default:
+    {
+      Serial.println("ERROR: No valid sensortype");
+    }   
   }
 
-  mySerial.flush();
-  
-  if(data[0]==0xff)
-    {
-      int sum;
-      sum=(data[0]+data[1]+data[2])&0x00FF;
-      if(sum==data[3])
-      {
-        distance=(data[1]<<8)+data[2];
-        if(distance>30)
-          {
-           Serial.print("distance=");
-           Serial.print(distance/10);
-           Serial.println("cm");
-          }else 
-             {
-               Serial.println("Below the lower limit");
-             }
-      }else Serial.println("ERROR");
-     }
-     else Serial.println("ERROR: first byte wrong"); 
+  Serial.print("********** Ultrasonic Distance: ");
+  Serial.print(distance / 10);
+  Serial.println(" cm"); 
 }
 
+
+/*
+ * Help function for LMIC
+ */
 void printHex2(unsigned v) {
     v &= 0xff;
     if (v < 16)
@@ -203,7 +243,6 @@ void do_send(osjob_t* j){
 }
 
 
-
 void setup() {
   Serial.begin(115200);
   mySerial.begin(9600, SERIAL_8N1, 16,17);
@@ -217,9 +256,12 @@ void setup() {
   // Start job
   do_send(&sendjob);
 
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  
+
 }
 
 void loop() {
   os_runloop_once();
- 
 }
