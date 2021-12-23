@@ -12,10 +12,13 @@ The script reads the measurement of the in the `config.h` specified sensor and s
 ### 1.1 The Things Network
 1. If you aren't already registered, [set up a The Things Network account](https://account.thethingsnetwork.org/register)
 2. Create a new Application in TTN [Applications Console](https://console.thethingsnetwork.org/applications)
-3. Add a new device for your new TTN application and select **OTAA Activation Method**
+3. Create a new end device and set following parameters: 
+    * Frequencyplan -> depends on your location
+    * LoRaWAN version -> For this TTGO ESP32 it depends on the version set in the [Arduino-LMIC](https://github.com/mcci-catena/arduino-lmic) library. Default is MAC V1.0.3
+    * Other parameters can be generated
 4. In your Application select **Payload Formats** and set it to `Cayenne LPP`
-5. For the integration with [OpenSenseMap](https://opensensemap.org/), select **Integrations** in your Application and create a new **HTTP Integration**
-6. Choose a unique 'Process ID' and set 'Access Key' to `default key`. For the 'URL' use `https://ttn.opensensemap.org/v1.1` as the endpoint and choose `POST` as the 'Method' . The remaining fields can be left out ([See here](https://osem.books.sensebox.de/de/ttn_integration.html)).
+5. For the integration with [OpenSenseMap](https://opensensemap.org/), select **Integrations** in your Application and create a new **Custom webhook**
+6. Choose a unique 'Webhook ID' and use JSON as the 'Webhook format'. The 'Base URL' should be `https://ttn.opensensemap.org/v3`. It is important to enable 'Uplink message'. The remaining fields can be left out ([See here](https://forum.sensebox.de/t/cayenne-ttnv2-3-nach-osem-functioniert-nicht/1215/7)).
 
 ### 1.2 OpenSenseMap
 1. If you aren't already registered, [set up a OpenSenseMap account](https://opensensemap.org/register)
@@ -23,8 +26,7 @@ The script reads the measurement of the in the `config.h` specified sensor and s
 3. Fill in the appropriate data like 'name', 'exposure type' and 'location'
 4. Select 'Manual configuration' for your **Hardware** and 'Add sensor' with Phenomenon: `distance`, Unit: `mm` and Type: `ultrasonic`.
 5. In **Advanced** choose 'TheThingsNetwork-TTN' and add `Cayenne LPP (beta)` as 'Decoding Profile'. Furthermore add your 'TTN Application-ID' and 'TTN Device-ID' from your [TheThingsNetwork application](https://console.thethingsnetwork.org/applications).
-6. After your 'senseBox' is created edit it and go the **TheThingsNetwork** Settings.
-7. In **Decoding Options** choose 'Cayenne LPP Phenomenon' as `Illumination` (to support floats with uint16) and if not already set, the 'Cayenne LPP Channel' to `1`.
+6. In **Decoding Options** choose 'Cayenne LPP Phenomenon' as `Illumination` (to support floats with uint16) and if not already set, the 'Cayenne LPP Channel' to `1`.
 
 ## 2. Install Libraries in Arduino IDE
 1. Install the [ESP32 Core for Arduino](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md) (Installation with Boards Manager)
