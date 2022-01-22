@@ -1,3 +1,11 @@
+/*
+ * 
+ * 
+ * Codesnippets:
+ *   - ESP32 DeepSleep function: https://jackgruber.github.io/2020-04-13-ESP32-DeepSleep-and-LoraWAN-OTAA-join/
+ */
+
+
 #include <HardwareSerial.h>
 #include <lmic.h>
 #include <hal/hal.h>
@@ -13,7 +21,7 @@
 #define ECHO_PIN    12    // pin ECHO 
 // PINS for RX and TX (UART Serial) (used by sensortype A02YYUW)
 #define RX_PIN      17    // pin RX
-#define TX_PIN      16    // pin TX
+#define TX_PIN      16    // pin TX 
 
 
 //Define Serial for UART connection
@@ -22,6 +30,12 @@ unsigned char data[4]={};
 
 //sensordata
 float distance;
+
+//Use RTC memory to store LMIC configurations
+RTC_DATA_ATTR lmic_t RTC_LMIC;
+
+//global var to check if we can go to deep sleep
+bool GOTO_DEEPSLEEP = false;
 
 
 CayenneLPP lpp(51); // here we will construct Cayenne Low Power Payload (LPP) - see https://community.mydevices.com/t/cayenne-lpp-2-0/7510
@@ -89,6 +103,7 @@ void getDistance() {
       digitalWrite(TRIG_PIN, LOW);
       long duration = pulseIn(ECHO_PIN, HIGH);
       distance = duration * 0.343/2;
+      Serial.println(duration);
       break;
     }
     //default case
@@ -183,8 +198,9 @@ void onEvent (ev_t ev) {
               Serial.print(LMIC.dataLen);
               Serial.println(F(" bytes of payload"));
             }
+            GOTO_DEEPSLEEP = true;
             // Schedule next transmission
-            os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
+            // os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
             break;
         case EV_LOST_TSYNC:
             Serial.println(F("EV_LOST_TSYNC"));
@@ -228,6 +244,7 @@ void onEvent (ev_t ev) {
 void do_send(osjob_t* j){
   //get distance from sensor
   getDistance();
+  delay(1000);
   // Check if there is not a current TX/RX job running
   if (LMIC.opmode & OP_TXRXPEND) {
     Serial.println(F("OP_TXRXPEND, not sending"));
@@ -242,26 +259,104 @@ void do_send(osjob_t* j){
   // Next TX is scheduled after TX_COMPLETE event.
 }
 
+/*
+ * Save and Load LMIC data for deep sleep
+ * https://jackgruber.github.io/2020-04-13-ESP32-DeepSleep-and-LoraWAN-OTAA-join/
+ */
+ void SaveLMICToRTC(int deepsleep_sec)
+{
+    RTC_LMIC = LMIC;
+    // EU Like Bands
 
+    //System time is resetted after sleep. So we need to calculate the dutycycle with a resetted system time
+    unsigned long now = millis();
+#if defined(CFG_LMIC_EU_like)
+    for(int i = 0; i < MAX_BANDS; i++) {
+        ostime_t correctedAvail = RTC_LMIC.bands[i].avail - ((now/1000.0 + deepsleep_sec ) * OSTICKS_PER_SEC);
+        if(correctedAvail < 0) {
+            correctedAvail = 0;
+        }
+        RTC_LMIC.bands[i].avail = correctedAvail;
+    }
+
+    RTC_LMIC.globalDutyAvail = RTC_LMIC.globalDutyAvail - ((now/1000.0 + deepsleep_sec ) * OSTICKS_PER_SEC);
+    if(RTC_LMIC.globalDutyAvail < 0) 
+    {
+        RTC_LMIC.globalDutyAvail = 0;
+    }
+#else
+    Serial.println("No DutyCycle recalculation function!")
+#endif
+}
+
+void LoadLMICFromRTC()
+{
+    LMIC = RTC_LMIC;
+}
+
+/*
+ * Function to start deep sleep of ESP 
+ */
+void GoDeepSleep()
+{
+  Serial.println(F("Go DeepSleep"));
+  Serial.flush();
+  esp_sleep_enable_timer_wakeup(TX_INTERVAL * 1000000);
+  esp_deep_sleep_start();
+}
+
+/*
+ * Setup fupnction. Will be runed after each deep sleep and at start
+ */
 void setup() {
   Serial.begin(115200);
   mySerial.begin(9600, SERIAL_8N1, 16,17);
+
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
 
   // LMIC init
   os_init();
   //Reset the MAC state. Session and pending data transfers will be discarded.
   LMIC_reset();
-  
+
+  // Load the LoRa information from RTC if available
+  if(RTC_LMIC.seqnoUp != 0)
+  { 
+      LoadLMICFromRTC();
+  }
 
   // Start job
   do_send(&sendjob);
 
-  pinMode(TRIG_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
+
   
 
 }
 
+/*
+ * Loop is checking if we can go to deep sleep after sending data to TTN
+ */
 void loop() {
+  static unsigned long lastPrintTime = 0;
+  
   os_runloop_once();
+
+  //Check if deep sleep is posibble or a time critical job is running
+  const bool timeCriticalJobs = os_queryTimeCriticalJobs(ms2osticksRound((TX_INTERVAL * 1000)));
+  if (!timeCriticalJobs && GOTO_DEEPSLEEP == true && !(LMIC.opmode & OP_TXRXPEND))
+  {
+    Serial.print(F("Can go sleep "));
+    SaveLMICToRTC(TX_INTERVAL);
+    GoDeepSleep();
+  }
+  else if (lastPrintTime + 2000 < millis())
+  {
+    Serial.print(F("Cannot sleep "));
+    Serial.print(F("TimeCriticalJobs: "));
+    Serial.print(timeCriticalJobs);
+    Serial.print(" ");
+
+    lastPrintTime = millis();
+  }
 }
