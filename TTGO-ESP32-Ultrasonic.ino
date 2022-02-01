@@ -15,15 +15,6 @@
 // COPY the config.h.template and RENAME to config.h file in the same folder WITH YOUR TTN KEYS AND ADDR.
 #include "config.h"
 
-//DEFINE PINS
-// PINS for trig and echo (used by sensortype TRIG_ECHO)
-#define TRIG_PIN    13    // pin TRIG 
-#define ECHO_PIN    12    // pin ECHO 
-// PINS for RX and TX (UART Serial) (used by sensortype A02YYUW)
-#define RX_PIN      17    // pin RX
-#define TX_PIN      16    // pin TX 
-
-
 //Define Serial for UART connection
 HardwareSerial mySerial(2);
 unsigned char data[4]={};
@@ -49,24 +40,20 @@ void os_getDevKey (u1_t* buf) { memcpy_P(buf, APPKEY, 16);}
 
 static osjob_t sendjob;
 
-// Schedule TX every this many seconds (might become longer due to duty
-// cycle limitations).
-const unsigned TX_INTERVAL = 30;
-
-//Pin mapping for TTGO ESP32
-const lmic_pinmap lmic_pins = {
-    .nss = 18, 
-    .rxtx = LMIC_UNUSED_PIN,
-    .rst = 14,
-    .dio = {/*dio0*/ 26, /*dio1*/ 33, /*dio2*/ 32}
-};
 
 
 /*
  * Function to read distance from different sensortypes (float distance saves distance in mm)
  */
 void getDistance() {
-  switch (sensor)
+  // start power if enabled
+  if(ENABLE_PWR_PIN)
+  {
+    digitalWrite(PWR_PIN, HIGH);
+    delay(1000);
+  }
+  
+  switch (SENSOR)
   {
     //read sensor over UART (sensortype A0YYUW)
     case A0YYUW:
@@ -113,6 +100,13 @@ void getDistance() {
     }   
   }
 
+  //stop power to sensor
+  if(ENABLE_PWR_PIN)
+  {
+    digitalWrite(PWR_PIN, LOW);
+  }
+  
+  //print output of sensor in cm
   Serial.print("********** Ultrasonic Distance: ");
   Serial.print(distance / 10);
   Serial.println(" cm"); 
@@ -312,6 +306,11 @@ void setup() {
   Serial.begin(115200);
   mySerial.begin(9600, SERIAL_8N1, 16,17);
 
+  //activate pins
+  if(ENABLE_PWR_PIN)
+  {
+    pinMode(PWR_PIN, OUTPUT);
+  }
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
