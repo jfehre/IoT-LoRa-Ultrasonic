@@ -4,7 +4,7 @@ This folder contains the implementation with a [TTGO ESP32 LoRa](http://www.lily
 
 ## 1. Backend Setup
 
-For the backend setup please follow the instructions on the [main readme](../)
+For the backend setup please follow the instructions on the [main readme](https://github.com/jfehre/IoT-LoRa-Ultrasonic)
 
 ## 2. Install Libraries in Arduino IDE
 1. Install the [ESP32 Core for Arduino](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md) (Installation with Boards Manager)
@@ -49,4 +49,8 @@ You can also use other GPIO pins which are not used internally by the board.
 ## 5. TTGO ESP32 LoRa Pinout:
 ![ESP Pinout](images/esp_pinout.jpeg)
 
+## Information about Power Consumption
+
+
+- Board: active -> 66mA : deep sleep -> 20mA
 
