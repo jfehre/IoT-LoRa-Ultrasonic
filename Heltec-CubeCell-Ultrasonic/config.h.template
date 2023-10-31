@@ -1,0 +1,47 @@
+// UPDATE WITH YOUR TTN KEYS AND EUIS.
+
+// This EUI must be in little-endian format, so least-significant-byte
+// first. When copying an EUI from ttnctl output, this means to reverse
+// the bytes. For TTN issued EUIs the last bytes should be 0xD5, 0xB3,
+// 0x70.
+static const u1_t PROGMEM APPEUI[8]= { FILLME };
+// This should also be in little endian format, see above.
+static const u1_t PROGMEM DEVEUI[8]= { FILLME };
+// This key should be in big endian format (or, since it is not really a
+// number but a block of memory, endianness does not really apply).
+static const u1_t PROGMEM APPKEY[16] = { FILLME };
+
+// PIN MAPPING FOR LORA
+//Pin mapping for TTGO ESP32
+const lmic_pinmap lmic_pins = {
+    .nss = 18, 
+    .rxtx = LMIC_UNUSED_PIN,
+    .rst = 14,
+    .dio = {/*dio0*/ 26, /*dio1*/ 33, /*dio2*/ 32}
+};
+
+//DEFINE PINS
+// PINS for trig and echo (used by sensortype TRIG_ECHO)
+#define TRIG_PIN    13    // pin TRIG 
+#define ECHO_PIN    12    // pin ECHO 
+// PINS for RX and TX (UART Serial) (used by sensortype A02YYUW)
+#define RX_PIN      17    // pin RX
+#define TX_PIN      16    // pin TX 
+// POWER PIN
+#define PWR_PIN     21    // pin POWER
+
+//DEFINE Sensortype
+enum Sensortype {A0YYUW, TRIG_ECHO};
+//change this line to define how the measurements are read in the getDistance() function
+//static const Sensortype sensor = A0YYUW;
+static const Sensortype SENSOR = TRIG_ECHO;
+
+//USE POWER PIN
+//if your sensor supports 3.3v you can enable power pin to save even more power during deep sleep
+static const bool ENABLE_PWR_PIN = false;
+
+// CYCLE TIME
+// Schedule TX every this many seconds (might become longer due to duty
+// cycle limitations).
+const unsigned TX_INTERVAL = 30;
+
