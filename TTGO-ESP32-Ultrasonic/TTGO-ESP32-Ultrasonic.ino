@@ -58,24 +58,43 @@ void getDistance() {
     //read sensor over UART (sensortype A0YYUW)
     case A0YYUW:
     {
-      while (mySerial.available() > 0) {
-        for (int i=0;i<4;i++) {
-          data[i] = mySerial.read();
+      // flushing otherwise wrong data come in
+      mySerial.flush();
+      // delay so serial available after flush
+      delay(100);
+      while (mySerial.available() > 0 && newData == false) {
+        if (headerReceived == false)
+        {
+          // wait for header byte (starting with 0xFF)
+          if (mySerial.read() == 0xFF)
+          {
+            headerReceived = true;
+            data[0] = 0xFF;
+            dataIndex++;
+          }
+        }else 
+        {
+          // read data
+          data[dataIndex] = mySerial.read();
+          dataIndex++;
+          if (dataIndex == 4)
+          {
+            dataIndex = 0;
+            newData = true;
+          }
         }
       }
-    
-      mySerial.flush();
-  
-      if(data[0]==0xff)
+      //calculate distance
+      int sum;
+      sum=(data[0]+data[1]+data[2])&0x00FF;
+      if(sum==data[3])
       {
-        int sum;
-        sum=(data[0]+data[1]+data[2])&0x00FF;
-        if(sum==data[3])
-        {
-          distance=(data[1]<<8)+data[2];
-        }else Serial.println("ERROR");
-      }
-      else Serial.println("ERROR: first byte wrong");
+        distance=(data[1]<<8)+data[2];
+        Serial.println(distance/10);
+      }else Serial.println("ERROR");
+    
+      newData = false;
+      headerReceived = false;
       break;
     }
     //read sensor over TRIG/ECHO (sensortype ex. AJ-SR04M or HC-SR04)  

@@ -1,20 +1,20 @@
 # TTGO ESP32
 
-This folder contains the implementation with a [TTGO ESP32 LoRa](http://www.lilygo.cn/prod_view.aspx?TypeId=50003&Id=1141&FId=t3:50003:3).
+This folder contains the implementation with a [TTGO LoRa32 SX1276](http://www.lilygo.cn/prod_view.aspx?TypeId=50003&Id=1141&FId=t3:50003:3) (not available anymore? See [Successor](https://www.lilygo.cc/products/lora32-v1-0)).
 
 ## 1. Backend Setup
 
 For the backend setup please follow the instructions on the [main readme](https://github.com/jfehre/IoT-LoRa-Ultrasonic)
 
 ## 2. Install Libraries in Arduino IDE
-1. Install the [ESP32 Core for Arduino](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md) (Installation with Boards Manager)
+1. Install the [ESP32 Core for Arduino](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html) (Installation with Boards Manager)
 2. Install the [LoRa](https://github.com/sandeepmistry/arduino-LoRa) library which supports the SX1276 Chip
-3. Install [CayenneLPP](https://github.com/sabas1080/CayenneLPP) to package LoRa packets.
+3. Install [CayenneLPP](https://github.com/ElectronicCats/CayenneLPP) to package LoRa packets.
 4. Install [Arduino-LMIC](https://github.com/mcci-catena/arduino-lmic) to send data over LoRaWan
 
 ## 3. ESP Setup
 1. Copy the Template: `cp config.h.template config.h`. (This file is filled in with private data and should not be published)
-2. Insert **Application EUI** (lsb), **Device EUI** (lsb) and **App Key** (msb) from the **Device Overview** in your [TheThingsNetwork application](https://console.thethingsnetwork.org/applications) to the `config.h` file. (Note: use the 'C-style' not Hex)
+2. Insert **Application EUI** (lsb), **Device EUI** (lsb) and **App Key** (msb) from the **Device Overview** in your [TheThingsNetwork](cloud.thethings.network) application to the `config.h` file. (Note: use the 'C-style' not Hex)
 3. *Optional*: Change in `config.h` the way how to read sensordata (UART/A02YYUW or Trig/Echo)
 4. *Optional*: Change the pins in `config.h`
 5. *Optional*: Change cycle time in `config.h`
@@ -36,7 +36,7 @@ For the backend setup please follow the instructions on the [main readme](https:
 
 You should also be able to use the other UART 1 connection of the board (Unforunately I'm not sure which PINs belong to the UART 1)
 
-[Sensor Information](https://wiki.dfrobot.com/A02YYUW%20Waterproof%20Ultrasonic%20Sensor%20SKU:%20SEN0311)
+[Sensor Information](https://wiki.dfrobot.com/_A02YYUW_Waterproof_Ultrasonic_Sensor_SKU_SEN0311)
 
 ### Echo/Trig sensors (AJ-SR04M and HC-SR04)
 1. Connect `GND` of Sensor to `GND` of Board

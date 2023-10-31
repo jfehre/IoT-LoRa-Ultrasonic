@@ -6,11 +6,11 @@ The goal of this arduino project is to create an IoT Device which measures the d
 For measurement, this script supports two ways of communicating with an ultrasonic distance sensor:
 
 
-- **UART Serial:** (tested with the [waterproof ultrasonic sensor SKU (A02YYUW)](https://wiki.dfrobot.com/A02YYUW%20Waterproof%20Ultrasonic%20Sensor%20SKU:%20SEN0311) from dfrobot.)
+- **UART Serial:** (tested with the [waterproof ultrasonic sensor SKU (A02YYUW)](https://wiki.dfrobot.com/_A02YYUW_Waterproof_Ultrasonic_Sensor_SKU_SEN0311) from dfrobot.)
 - **Analog (Trig/Echo):**  (tested with the AJ-SR04M and HC-SR04 Sensors)
 
 
-**TTGO ESP32 LoRA:** The first approach happened with an [TTGO ESP32 LoRa](http://www.lilygo.cn/prod_view.aspx?TypeId=50003&Id=1141&FId=t3:50003:3) board. However the power consumption of the board during deep sleep is too high (10mA). Furthermore the sensors always drained power (even during deep sleep), but this could be solved by powering the sensor with a GPIO Pin.  
+**TTGO ESP32 LoRA:** The first approach happened with an [TTGO ESP32 LoRa](https://www.lilygo.cc/products/lora32-v1-0) board. However the power consumption of the board during deep sleep is too high (10mA). Furthermore the sensors always drained power (even during deep sleep), but this could be solved by powering the sensor with a GPIO Pin.  
 -> see subfolder [TTGO-ESP32-Ultrasonic](/TTGO-ESP32-Ultrasonic).
 
 **HelTec CubeCell:** As a result of the high power consumption during deep sleep a [Heltec CubeCell](https://heltec.org/project/htcc-ab01/) microcontroller is used, which should need 2µA during deep sleep.  
